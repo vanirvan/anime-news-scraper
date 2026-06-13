@@ -1,0 +1,625 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 * * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        0
+      ],
+      "id": "22fee276-a3cc-4397-9d58-938063b993c4"
+    },
+    {
+      "parameters": {
+        "url": "https://www.animenewsnetwork.com/news/rss.xml",
+        "options": {}
+      },
+      "name": "RSS Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -96
+      ],
+      "id": "11191a30-0d40-4faf-9795-4a5e70f3cccd"
+    },
+    {
+      "parameters": {
+        "language": "javascript",
+        "jsCode": "const rssItems = $input.all()[0].json.rssItems || [];\nconst dbUrls = $input.all()[0].json.dbUrls || [];\n\nconst existingUrls = new Set(dbUrls.map(row => row.url));\nconst newArticles = rssItems.filter(item => !existingUrls.has(item.link));\n\nreturn newArticles.map(item => ({ json: item }));"
+      },
+      "name": "Code (Filter New)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        736,
+        0
+      ],
+      "id": "27d81458-e30c-461a-abc0-ba2bff08dfce"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        512,
+        0
+      ],
+      "id": "1df49a73-4ae1-486c-b977-17f10ae7acbf"
+    },
+    {
+      "parameters": {
+        "language": "javascript",
+        "jsCode": "return [{ json: { rssItems: $('RSS Read').all().map(i => i.json) } }];"
+      },
+      "name": "Format RSS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        288,
+        -96
+      ],
+      "id": "264d8bbc-c335-47d3-803c-2a0445a1836e"
+    },
+    {
+      "parameters": {
+        "language": "javascript",
+        "jsCode": "return [{ json: { dbUrls: $('Postgres (Get Saved URLs)').all().map(i => i.json) } }];"
+      },
+      "name": "Format DB",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        288,
+        96
+      ],
+      "id": "ba32a496-30a8-42e6-bcbc-e29346a0f8ed"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        960,
+        0
+      ],
+      "id": "c3a18222-cd01-400b-9565-de4ee7699514",
+      "name": "Split In Batches"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "news_items",
+          "mode": "list",
+          "cachedResultName": "news_items"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{ $json.title }}",
+            "url": "={{ $json.url }}",
+            "image_url": "={{ $json.image_url }}",
+            "content": "={{ $json.content }}",
+            "source": "={{ $json.source }}",
+            "status": "={{ $json.status }}",
+            "published_at": "={{ $json.published_at }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "published_at",
+              "displayName": "published_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "4632f612-a066-40d5-89c1-f77f0d806450",
+      "name": "Postgres (Insert Article)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1856,
+        -128
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "9oIobXpIgT6P042A",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "javascript",
+        "jsCode": "return $input.all().map((item, index) => {\n  // 1. Mengambil naskah AI langsung dari node sebelumnya (Basic LLM Chain)\n  const aiScript = item.json.text; \n  \n  // 2. Mengambil data artikel dari node Postgres berdasarkan index iterasi saat ini\n  const article = $('Postgres (Insert Article)').all()[index].json; \n\n  // Slugify judul agar aman digunakan sebagai nama file\n  const sanitizedTitle = article.title\n    .toLowerCase()\n    .replace(/[^a-z0-9\\s-]/g, '') // Hanya alfanumerik, spasi, dash\n    .trim()\n    .replace(/\\s+/g, '-')         // Spasi jadi dash\n    .replace(/-+/g, '-')          // Satukan dash ganda\n    .substring(0, 50);\n\n  // Mengambil prefix tanggal & waktu (YYYY-MM-DD-HHmm) dalam zona waktu Asia/Jakarta (+7)\n  let datePrefix = \"\";\n\n  if (article.published_at) {\n    const dateObj = new Date(article.published_at);\n    if (!isNaN(dateObj.getTime())) {\n      const formatted = new Intl.DateTimeFormat('sv-SE', {\n        timeZone: 'Asia/Jakarta',\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit',\n        hour: '2-digit',\n        minute: '2-digit',\n        hour12: false\n      }).format(dateObj); // sv-SE outputs: \"YYYY-MM-DD HH:mm\"\n      \n      datePrefix = formatted.replace(' ', '-').replace(':', ''); // Menjadi: \"YYYY-MM-DD-HHmm\"\n    }\n  }\n  \n  if (!datePrefix) {\n    const formattedNow = new Intl.DateTimeFormat('sv-SE', {\n      timeZone: 'Asia/Jakarta',\n      year: 'numeric',\n      month: '2-digit',\n      day: '2-digit',\n      hour: '2-digit',\n      minute: '2-digit',\n      hour12: false\n    }).format(new Date());\n    \n    datePrefix = formattedNow.replace(' ', '-').replace(':', '');\n  }\n\n  // Nama file menjadi: YYYY-MM-DD-HHmm-judul.md\n  const filename = `${datePrefix}-${sanitizedTitle || 'article'}.md`;\n\n  // Template Markdown\n  const markdownContent = `===\ntitle: ${article.title}\nthumbnail: ${article.url},${article.image_url}\nsource: ${article.source}\n===\n\n![thumbnail](${article.image_url})\n\n# ${article.title}\n\n## 📝 Naskah Konten Kreator (AI)\n${aiScript}\n\n---\n\n## 📰 Berita Asli\n${article.content}\n`;\n\n  return {\n    json: {\n      filename: filename,\n      markdownContent: markdownContent\n    }\n  };\n});\n"
+      },
+      "id": "acb52108-f49d-4837-ab55-147118257fbe",
+      "name": "Code (Format Markdown)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "markdownContent",
+        "options": {
+          "encoding": "utf8",
+          "fileName": "={{ $json.filename }}"
+        }
+      },
+      "id": "ecd56dc5-ee89-400c-bc24-4a0385354afa",
+      "name": "Convert to File",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2656,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "fileName": "=/data/obsidian/news/{{ $binary.data.fileName }}",
+        "options": {}
+      },
+      "id": "3e7bb760-2cda-4d4e-ad80-0a9ce7bd7d49",
+      "name": "Write Markdown File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        2880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json[\"link\"]}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1184,
+        -128
+      ],
+      "id": "da1e063f-576d-475f-a95e-711d3689a9ba"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "h1#page_header"
+            },
+            {
+              "key": "content",
+              "cssSelector": "div.meat"
+            },
+            {
+              "key": "image",
+              "cssSelector": "div.meat img",
+              "returnValue": "attribute",
+              "attribute": "data-src"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "HTML1",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        -128
+      ],
+      "id": "5c7f3f3c-1d14-463a-b5c9-159c1ce23dd8"
+    },
+    {
+      "parameters": {
+        "language": "javascript",
+        "jsCode": "const extracted = $input.all()[0].json;\nconst rssData = $('Split In Batches').first().json;\n\nlet cleanTitle = extracted.title || \"\";\ncleanTitle = cleanTitle.replace(/^News\\n/, '').replace(/\\n/g, ' ').trim();\n\nlet imageUrl = extracted.image || \"\";\nif (imageUrl.startsWith('/')) {\n    imageUrl = 'https://www.animenewsnetwork.com' + imageUrl;\n}\n\nlet publishedAt = \"\";\nif (rssData.pubDate) {\n    const dateObj = new Date(rssData.pubDate);\n    if (!isNaN(dateObj.getTime())) {\n        publishedAt = dateObj.toISOString(); \n    } else {\n        publishedAt = rssData.pubDate;\n    }\n}\n\nreturn [{\n  json: {\n    title: cleanTitle,\n    url: rssData.link,\n    content: extracted.content,\n    image_url: imageUrl,\n    published_at: publishedAt,\n    source: \"Anime News Network\",\n    status: \"new\"\n  }\n}];"
+      },
+      "name": "Code (Format)1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        -128
+      ],
+      "id": "e8765f5f-dcd4-4967-881e-d326ef2b2537"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "dahono/deepseek-v4-flash",
+          "mode": "id"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2160,
+        96
+      ],
+      "id": "32d57339-fe9f-423c-89da-e29803181dbb",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "iQ4YRFYAji2uwvHw",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Please create a video script based on this content:\n<data>\n<title>{{ $json.title }}</title>\n<content>{{ $json.content }}</content>\n</data>",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an expert Video Scriptwriter. Your task is to transform scraped web content into an engaging video script.  [STRICT RULES FOR DURATION] - Target duration: 30 seconds to 1 minute (approx. 70 - 130 words of script). - If the content is highly complex or long, you are allowed to extend the script up to a maximum of 3 minutes (max 400 words of script). Do not exceed this.  [LANGUAGE REQUIREMENT] - You MUST write the final script title and body in INDONESIAN. - Use conversational, casual, and natural Indonesian (gaya bahasa lisan), NOT formal.  [OUTPUT FORMAT] Write the script as a continuous text for reading. Insert visual directions inside brackets [like this] at every scene transition.  Format: **Judul Video:** [Indonesian Title] **Estimasi Durasi:** [X detik / menit] --- **[NASKAH VIDEO]** [Visual: Opening] (Indonesian hook...) [Visual: Content] (Indonesian main script...) [Visual: Closing] (Indonesian CTA...)"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2080,
+        -128
+      ],
+      "id": "7a5d5342-f870-4f12-96ae-db5a5cb3ca85",
+      "name": "AI Video Scripting",
+      "notesInFlow": false,
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT url from news_items LIMIT 50",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        64,
+        96
+      ],
+      "id": "19c180eb-3513-4987-8c1f-348fe675dfb5",
+      "name": "Postgres (Get Saved URLs)",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "9oIobXpIgT6P042A",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Postgres (Get Saved URLs)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Format RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (Filter New)": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code (Filter New)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format RSS": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format DB": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres (Insert Article)": {
+      "main": [
+        [
+          {
+            "node": "AI Video Scripting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (Format Markdown)": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Write Markdown File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Markdown File": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "Code (Format)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (Format)1": {
+      "main": [
+        [
+          {
+            "node": "Postgres (Insert Article)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Video Scripting",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Video Scripting": {
+      "main": [
+        [
+          {
+            "node": "Code (Format Markdown)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres (Get Saved URLs)": {
+      "main": [
+        [
+          {
+            "node": "Format DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c624cec6c71fde6702627c9e2a71cdc44f3647353be042bc3be411a9292382c7"
+  }
+}
