@@ -16,7 +16,7 @@
       "typeVersion": 1,
       "position": [
         -160,
-        0
+        -64
       ],
       "id": "22fee276-a3cc-4397-9d58-938063b993c4"
     },
@@ -30,7 +30,7 @@
       "typeVersion": 1,
       "position": [
         64,
-        -96
+        -160
       ],
       "id": "11191a30-0d40-4faf-9795-4a5e70f3cccd"
     },
@@ -44,7 +44,7 @@
       "typeVersion": 1,
       "position": [
         736,
-        0
+        -64
       ],
       "id": "27d81458-e30c-461a-abc0-ba2bff08dfce"
     },
@@ -59,7 +59,7 @@
       "typeVersion": 2.1,
       "position": [
         512,
-        0
+        -64
       ],
       "id": "1df49a73-4ae1-486c-b977-17f10ae7acbf"
     },
@@ -73,7 +73,7 @@
       "typeVersion": 1,
       "position": [
         288,
-        -96
+        -160
       ],
       "id": "264d8bbc-c335-47d3-803c-2a0445a1836e"
     },
@@ -87,7 +87,7 @@
       "typeVersion": 1,
       "position": [
         288,
-        96
+        32
       ],
       "id": "ba32a496-30a8-42e6-bcbc-e29346a0f8ed"
     },
@@ -99,7 +99,7 @@
       "typeVersion": 3,
       "position": [
         960,
-        0
+        -64
       ],
       "id": "c3a18222-cd01-400b-9565-de4ee7699514",
       "name": "Split In Batches"
@@ -226,8 +226,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1856,
-        -128
+        2080,
+        -192
       ],
       "credentials": {
         "postgres": {
@@ -246,8 +246,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        2432,
-        -128
+        2656,
+        -192
       ]
     },
     {
@@ -264,8 +264,8 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        2656,
-        -128
+        2880,
+        -192
       ]
     },
     {
@@ -278,8 +278,8 @@
       "type": "n8n-nodes-base.writeBinaryFile",
       "typeVersion": 1,
       "position": [
-        2880,
-        0
+        3104,
+        -64
       ]
     },
     {
@@ -297,8 +297,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1184,
-        -128
+        1408,
+        -192
       ],
       "id": "da1e063f-576d-475f-a95e-711d3689a9ba"
     },
@@ -329,8 +329,8 @@
       "type": "n8n-nodes-base.html",
       "typeVersion": 1,
       "position": [
-        1408,
-        -128
+        1632,
+        -192
       ],
       "id": "5c7f3f3c-1d14-463a-b5c9-159c1ce23dd8"
     },
@@ -343,8 +343,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        1632,
-        -128
+        1856,
+        -192
       ],
       "id": "e8765f5f-dcd4-4967-881e-d326ef2b2537"
     },
@@ -361,8 +361,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        2160,
-        96
+        2384,
+        32
       ],
       "id": "32d57339-fe9f-423c-89da-e29803181dbb",
       "name": "OpenAI Chat Model",
@@ -389,8 +389,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        2080,
-        -128
+        2304,
+        -192
       ],
       "id": "7a5d5342-f870-4f12-96ae-db5a5cb3ca85",
       "name": "AI Video Scripting",
@@ -402,14 +402,14 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT url from news_items LIMIT 50",
+        "query": "SELECT url FROM news_items WHERE source = 'Anime News Network' LIMIT 50;\n",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
         64,
-        96
+        32
       ],
       "id": "19c180eb-3513-4987-8c1f-348fe675dfb5",
       "name": "Postgres (Get Saved URLs)",
@@ -420,6 +420,20 @@
           "name": "Postgres account"
         }
       }
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.floor(Math.random() * (10 - 5 + 1)) + 5 }}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1184,
+        -192
+      ],
+      "id": "8880c0df-ece0-49ce-8be0-6414aff1c77c",
+      "name": "Wait",
+      "webhookId": "a94eb89a-6990-4117-82b5-b8c4a80967c0"
     }
   ],
   "connections": {
@@ -499,7 +513,7 @@
         [],
         [
           {
-            "node": "HTTP Request1",
+            "node": "Wait",
             "type": "main",
             "index": 0
           }
@@ -610,6 +624,17 @@
         [
           {
             "node": "Format DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
             "type": "main",
             "index": 0
           }
